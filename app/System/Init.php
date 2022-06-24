@@ -7,6 +7,7 @@ class Init{
 
     public function run(){
         $this->loadConfigs();
+        $this->getRoutes();
     }
 
 
@@ -22,6 +23,11 @@ class Init{
         }
 
         $GLOBALS['_CONFIG'] = (object) $configs;
+    }
+
+
+    public function getRoutes(){
+        require_once(__DIR__.'/../routes.php');
     }
 
 }

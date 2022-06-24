@@ -9,5 +9,10 @@ class Home{
   }
 
 
+  public function edit($id=6){
+    echo "Düzenleme: $id";
+  }
+
+
 }
 ?>
