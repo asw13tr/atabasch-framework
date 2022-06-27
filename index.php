@@ -1,7 +1,17 @@
 <?php
 require_once(__DIR__.'/vendor/autoload.php');
 
-$rootInit = new \Atabasch\System\Init;
-$rootInit->run();
+
+
+$app = new \Atabasch\System\Application;
+$app->init();
+
+$request = new \Atabasch\System\Request;
+
+exit;
+
+//$app->setRoutes();
+
+$app->run();
 
 ?>

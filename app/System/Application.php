@@ -2,12 +2,11 @@
 
 namespace Atabasch\System;
 
-class Init{
+class Application{
 
 
-    public function run(){
+    public function init(){
         $this->loadConfigs();
-        $this->getRoutes();
     }
 
 
@@ -28,6 +27,13 @@ class Init{
 
     public function getRoutes(){
         require_once(__DIR__.'/../routes.php');
+    }
+
+
+
+
+    public function run(){
+        $this->getRoutes();
     }
 
 }

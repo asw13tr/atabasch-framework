@@ -179,8 +179,45 @@ class Router{
         return $this;
     }
 
+    /**
+     * PUT isteiği için bir route oluşturur.
+     *
+     * @param string $path
+     * @param $handler
+     * @return $this
+     */
+    public function put(string $path, $handler=null){
+        $this->addRoute("PUT", $path, $handler);
+        return $this;
+    }
 
     /**
+     * PATCH isteiği için bir route oluşturur.
+     *
+     * @param string $path
+     * @param $handler
+     * @return $this
+     */
+    public function patch(string $path, $handler=null){
+        $this->addRoute("PATCH", $path, $handler);
+        return $this;
+    }
+
+    /**
+     * DELETE isteiği için bir route oluşturur.
+     *
+     * @param string $path
+     * @param $handler
+     * @return $this
+     */
+    public function deletec(string $path, $handler=null){
+        $this->addRoute("DELETE", $path, $handler);
+        return $this;
+    }
+
+
+
+        /**
      * Oluşturulan route nesnesi için bir isim atar.
      *
      * @param string $name
