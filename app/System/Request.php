@@ -63,7 +63,7 @@ class Request
     }
 
     /**
-     * Host adresi ver QueryString çıkarılmış url;
+     * Host adresi ve QueryString çıkarılmış url;
      *
      * @return string
      */
@@ -87,7 +87,7 @@ class Request
      * @return string
      */
     public function pathWithQueryString(): string{
-        return $this->path().'?'.$this->queryString();
+        return $this->path() . (!$this->queryString()? '': '?'.$this->queryString());
     }
 
     /**

@@ -1,276 +1,197 @@
 <?php
 
 namespace Atabasch\System;
-use Atabasch\System\Url;
+
 
 class Router{
 
-    /** Bu değişkene yapıcı method içerisinde Url sınıfı atanır.
-     *
-     * @var \Atabasch\System\Url
-     */
-    private $url = null;
+    private string $controllerNamespace = 'Atabasch\Controllers';
 
-    /**
-     * Bu değişken set edilen route nesnesini alır.
-     *
-     * @var null
-     */
-    private $current = null;
+    private ?array $errorRoute = null;
 
-    /**
-     * Geliştirici tarafından oluşturulan routerlar bu dizide saklanır.
-     *
-     * @var array
-     */
-    private $routes = [];
+    private string $lastPath = '';
 
-    /**
-     * "named" methodu ile isim atanan route yolları bu dizi içinde saklanır.
-     *
-     * @var array
-     */
-    private $namedRoutes = [];
+    private array $routes = [];
 
-    /**
-     * Sayfa bulunamadığında çalışıcak olan 404 sayfası;
-     *
-     * @var null
-     */
-    private $route404 = null;
+    private array $namedRoutes = [];
 
-    /**
-     * Oluşturulan routelar için belirlenen koşullu parametrelere denk gelen düzenli ifadeler.
-     *
-     * @var string[]
-     */
-    private $pathRegex = [
-        '{single}'      =>  '?(\d)',
-        '{bool}'      =>  '?(0|1)',
-        '{boolean}'   =>  '?(0|1)',
-        '{id}'        =>  '?(-?\d+)',
-        '{int}'       =>  '?(-?\d+)',
-        '{number}'    =>  '?(-?[0-9\.]+)',
-        '{float}'     =>  '?(-?[0-9\.]+)',
-        '{double}'    =>  '?(-?[0-9\.]+)',
-        '{slug}'      =>  '?([A-Za-z0-9-_]+)',
-        '{string}'    =>  '?([A-Za-z0-9-_]+)',
-        '{}'          =>  '?([A-Za-z0-9-_]+)',
-        '{alphabet}'  =>  '?([A-Za-z-_]+)',
-        '{abc}'       =>  '?([A-Za-z-_]+)',
+    private mixed $routeError = null;
+
+    private array $pathRegex = [
+        '/\{([a-zA-Z_]+):single\}/i'    =>  '?(\d)',
+        '/\{([a-zA-Z_]+):bool\}/i'      =>  '?(0|1)',
+        '/\{([a-zA-Z_]+):boolean\}/i'   =>  '?(0|1)',
+        '/\{([a-zA-Z_]+):id\}/i'        =>  '?(-?\d+)',
+        '/\{([a-zA-Z_]+):int\}/i'       =>  '?(-?\d+)',
+        '/\{([a-zA-Z_]+):number\}/i'    =>  '?(-?[0-9\.]+)',
+        '/\{([a-zA-Z_]+):float\}/i'     =>  '?(-?[0-9\.]+)',
+        '/\{([a-zA-Z_]+):double\}/i'    =>  '?(-?[0-9\.]+)',
+        '/\{([a-zA-Z_]+):slug\}/i'      =>  '?([A-Za-z0-9-_]+)',
+        '/\{([a-zA-Z_]+):string\}/i'    =>  '?([A-Za-z0-9-_]+)',
+        '/\{([a-zA-Z_]+)\}/i'          =>  '?([A-Za-z0-9-_]+)',
+        '/\{([a-zA-Z_]+):alphabet\}/i'  =>  '?([A-Za-z-_]+)',
+        '/\{([a-zA-Z_]+):abc\}/i'       =>  '?([A-Za-z-_]+)',
     ];
 
-
-
-
-
-    public function __construct(){
-        $this->url = new Url();
-    }
-
     /**
-     * Oluşturulan yönlendiricileri çalıştıran method.
+     * Router çalıştırma methodu
      *
-     * @return bool|void
+     * @return void
      */
-    public function run(){
-        $route = $this->getRoute();
-        if($route){
-            return $this->runRoute($route);
+    public function run(): void{
+        $router = $this->findRoute();
+        if(!$router){
+            $this->runError();
         }else{
-            return $this->run404();
+            $this->runRoute($router);
         }
-
     }
 
     /**
-     * Çalışan sayfanın url içeriğini oluşturulan yönlendiriciler içerisinde arar.
-     * Eğer uyuşan bir yönlendirici bulursa yönlendirici nesnesini döndürür
-     * Eğer uyuşan bir yönlendirici bulamazsa false değeri döndürür.
+     * Parametre olarak gönderile route objesini çalıştırıp parametreleri yollar.
      *
-     * @return false|mixed
+     * @param object $router
+     * @return void
      */
-    public function getRoute(){
-        $result = false;
-        foreach($this->routes as $key => $route){
-            $currentUri = $_SERVER["REQUEST_METHOD"].'__'.$this->url->requestUri();
-            $findRoute = preg_match($key, $currentUri, $vars);
-            unset($vars[0]);
+    private function runRoute(object $router): void{
+        if(is_callable($router->handler)){
+            call_user_func_array($router->handler, $router->variables ?? []);
+        }else{
+            $controller = $this->getControllerInfo($router);
+            call_user_func_array( [new $controller->name, $controller->method], $router->variables ?? [] );
+        }
+    }
 
-            if($findRoute){
-                $route->variables = $vars;
-                $result = $route;
-                break;
+
+    /**
+     * Geçerli olan sayfanın method ve path'ine göre belirlenmiş route u bulup döndürür.
+     *
+     * @return object|null
+     */
+    private function findRoute(): object|null{
+        $request = new Request();
+        $resultRouter = null;
+
+        if(isset($this->routes[$request->method()])) {
+            foreach($this->routes[$request->method()] as $path => $route){
+                $isRoute = preg_match('@^'.$route->pathRegex.'$@miu', $request->path(), $variables);
+                if($isRoute){
+                    array_shift($variables);
+                    $resultRouter = $route;
+                    $resultRouter->variables = $variables;
+                    break;
+                }
             }
         }
-        return $result;
+
+        return $resultRouter;
     }
 
+
     /**
-     * Parametre olarak gönderilen route nesnesine atanmış olan fonksiyonu çalıştırır.
+     * Parametre olarak göndeerilen Route objesinden, atanmış controller adını ve çalıştırılacak methodu çeker.
      *
-     * @param $route
-     * @return bool|void
+     * @param object $router
+     * @return object
      */
-    public function runRoute($route){
-        if(is_callable($route->handler)){
-            call_user_func_array($route->handler, $route->variables);
-            return true;
+    private function getControllerInfo(object $router): object{
+        if(is_string($router->handler)){
+            $router->handler = explode('::', $router->handler);
+            if(count($router->handler)<2){
+                $router->handler[1] = 'index';
+            }
         }
 
-        if(is_array($route->handler)){
-            $ctrlClassName = $route->handler[0];
-            $ctrlMethodName = $route->handler[1];
-        }else{
-            list($ctrlClassName, $ctrlMethodName) = explode('::', $route->handler);
-        }
-
-        $ctrlClassString = "Atabasch\\Controllers\\".$ctrlClassName;
-        $controllerClass = new $ctrlClassString;
-        call_user_func_array(array($controllerClass, $ctrlMethodName), $route->variables);
-    }
-
-    /**
-     * Parametre ile gönderilen fonksiyonu bulunamayan routerlar için çalıştırır.
-     *
-     * @param $handler
-     * @return void
-     */
-    public function set404($handler=null){
-        $this->route404 = $handler;
-    }
-
-    /**
-     * Hata sayfasını çalıştıran method.
-     *
-     * @return void
-     */
-    public function run404(){
-        if(!$this->route404){
-            echo "Sayfa bulunamadı";
-        }else{
-            $route = (object)[ 'handler' => $this->route404, 'variables' => [] ];
-            $this->runRoute($route);
-        }
-    }
-
-
-    /**
-     * GET isteiği için bir route oluşturur.
-     *
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function get(string $path, $handler=null){
-        $this->addRoute("GET", $path, $handler);
-        return $this;
-    }
-
-    /**
-     * POST isteiği için bir route oluşturur.
-     *
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function post(string $path, $handler=null){
-        $this->addRoute("POST", $path, $handler);
-        return $this;
-    }
-
-    /**
-     * PUT isteiği için bir route oluşturur.
-     *
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function put(string $path, $handler=null){
-        $this->addRoute("PUT", $path, $handler);
-        return $this;
-    }
-
-    /**
-     * PATCH isteiği için bir route oluşturur.
-     *
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function patch(string $path, $handler=null){
-        $this->addRoute("PATCH", $path, $handler);
-        return $this;
-    }
-
-    /**
-     * DELETE isteiği için bir route oluşturur.
-     *
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function deletec(string $path, $handler=null){
-        $this->addRoute("DELETE", $path, $handler);
-        return $this;
-    }
-
-
-
-        /**
-     * Oluşturulan route nesnesi için bir isim atar.
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function name(string $name){
-        $this->namedRoutes[$name] = $this->current->path;
-        return $this;
-    }
-
-
-    /**
-     * Girilen url yolundaki {int}, {string}, {abc} gibi dinamik değerleri regex'e çevirir.
-     *
-     * @param string $path
-     * @return array|string|string[]
-     */
-    public function pathToRegex(string $path){
-        $regexPath = str_replace( array_keys($this->pathRegex), array_values($this->pathRegex), $path );
-        return str_replace(['/'], ['\/'], $regexPath);
-    }
-
-    /**
-     * Routes dizisine route nesnesi oluşturur ve ekler.
-     *
-     * @param string $method
-     * @param string $path
-     * @param $handler
-     * @return $this
-     */
-    public function addRoute(string $method, string $path, $handler){
-        $regexPath = $this->pathToRegex($path);
-        $this->current = (object)[
-            'method'    => $method,
-            'path'      => $path,
-            'handler'   => $handler
+        return (object) [
+            'name'   => "\\{$this->controllerNamespace}\\" . trim( str_replace("{$this->controllerNamespace}", '', $router->handler[0]), '\\' ),
+            'method' => $router->handler[1]
         ];
-        $this->routes["/^{$method}__{$regexPath}$/ium"] = $this->current;
-        return $this;
     }
 
     /**
-     * Çalışan sayfanın istek metodu ile parametrede gönderilen metod isimleri uyuşuyor mu?
+     * 404 Sayfaları için çalışacak olan router
      *
-     * @param $methods
-     * @return bool
+     * @return void
      */
-    public function checkMethod($methods = "GET"){
-        $methodsArray = explode(',', str_replace(['|','-','/'], ',', strtoupper($methods)));
-        return in_array($_SERVER["REQUEST_METHOD"], $methodsArray);
+    public function runError(){
+        if(!$this->routeError){
+            echo 'Not Found';
+        }else{
+            $this->runRoute($this->routeError);
+        }
     }
 
 
+
+    public function setError($handler=null){
+        $this->routeError = (object) [
+            'handler' => $handler
+        ];
+    }
+
+    //-------------------------------------------------------------------------------------
+    public function pathToRegex(string $path=null): string{
+        return preg_replace(array_keys($this->pathRegex), array_values($this->pathRegex), $path);
+    }
+
+
+    //-------------------------------------------------------------------------------------
+    public function add(array $methods=["GET"], string $path='', mixed $handler=null): void{
+        $this->lastPath = $path;
+        foreach($methods as $method){
+            $this->routes[strtoupper($method)][$path] = (object)[
+                'handler'   => $handler,
+                'path'      => $path,
+                'pathRegex' => $this->pathToRegex($path)
+            ];
+        }
+    }
+
+    public function get(string $path, mixed $handler = null): Router{
+        $this->add(["GET"], $path, $handler);
+        return $this;
+    }
+
+    public function post(string $path, mixed $handler = null): Router{
+        $this->add(["POST"], $path, $handler);
+        return $this;
+    }
+
+    public function put(string $path, mixed $handler = null): Router{
+        $this->add(["PUT"], $path, $handler);
+        return $this;
+    }
+
+    public function patch(string $path, mixed $handler = null): Router{
+        $this->add(["PATCH"], $path, $handler);
+        return $this;
+    }
+
+    public function delete(string $path, mixed $handler = null): Router{
+        $this->add(["DELETE"], $path, $handler);
+        return $this;
+    }
+
+    public function head(string $path, mixed $handler = null): Router{
+        $this->add(["HEAD"], $path, $handler);
+        return $this;
+    }
+
+    public function options(string $path, mixed $handler = null): Router{
+        $this->add(["OPTIONS"], $path, $handler);
+        return $this;
+    }
+
+    public function any(string $path, mixed $handler = null): Router{
+        $this->add(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"], $path, $handler);
+        return $this;
+    }
+
+    public function name(string $name=null){
+        if($name){
+            $this->namedRoutes[$name] = $this->lastPath;
+        }
+    }
 
 
 }

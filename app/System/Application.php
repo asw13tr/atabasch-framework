@@ -4,14 +4,37 @@ namespace Atabasch\System;
 
 class Application{
 
+    /**
+     * Yapıcı fonksiyon
+     */
+    public function __construct(){
+        $this->init();
+    }
 
-    public function init(){
+    /**
+     * Uygulama için gerekli kurulum işlemlerinin sırayla çalıştırılacağı method.
+     *
+     * @return void
+     */
+    private function init(): void{
         $this->loadConfigs();
     }
 
+    /**
+     * Uygulamayı çalıştıracak olan method
+     *
+     * @return void
+     */
+    public function run(): void{
+        $this->getRoutes();
+    }
 
-
-    private function loadConfigs(){
+    /**
+     * app\Configs klasöri içindeki dosyaları çağırıp _CONFIG adındaki global değişkeni oluşturan method
+     *
+     * @return void
+     */
+    private function loadConfigs(): void{
         $pathFolder = realpath(__DIR__.'/../Configs');
         $files = array_diff( scandir($pathFolder), ['.', '..'] );
 
@@ -24,16 +47,16 @@ class Application{
         $GLOBALS['_CONFIG'] = (object) $configs;
     }
 
-
-    public function getRoutes(){
-        require_once(__DIR__.'/../routes.php');
+    /**
+     * Yönlendiricileri getiren fonksiyon
+     *
+     * @return void
+     */
+    private function getRoutes(): void{
+        require(__DIR__.'/../routes.php');
     }
 
 
 
-
-    public function run(){
-        $this->getRoutes();
-    }
 
 }

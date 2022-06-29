@@ -1,30 +1,14 @@
 <?php
-$Router = new \Atabasch\System\Router;
-
-$Router->get('/', "Home::index")->name('anasayfa');
+$Router = new \Atabasch\System\Router();
 
 
-$Router->get('/users', function(){
-    echo "Burası kullanıcılar sayfası";
-})->name('uyeler');
 
-$Router->get('/posts', function(){
-    echo "Burası Makaleler sayfası";
-});
-
-$Router->get('/post/{slug}/show', function(){
-    echo "Burası Makaleler sayfası detayı";
-})->name('post.detail');
-
-$Router->get('/users', function(){
-    echo "Burası üyelerin listelendiği sayfa";
-})->name('users');
+$Router->get('/', "Main")->name('anasayfa');
+$Router->get('/home/show', "Main::show");
+$Router->get('/home/edit/{id:number}', ['Main', 'edit'])->name('anasayfa-duzenle');
+$Router->get('/home/delete', [\Atabasch\Controllers\Main::class, 'delete']);
 
 
-$Router->get('/user/edit/{int}?', ["Home", "edit"])->name('user.edit');
-
-
-$Router->set404("Error::notfound");
 
 $Router->run();
 ?>

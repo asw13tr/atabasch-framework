@@ -83,20 +83,16 @@ $request->ip();
 
 ##
 ```php
-$request->();
+$request->input();
 ```
 
 ##
 ```php
-$request->();
+$request->query();
 ```
 
 ##
 ```php
-$request->();
+$request->params();
 ```
 
-##
-```php
-$request->();
-```

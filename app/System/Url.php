@@ -10,8 +10,8 @@ use Atabasch\System\Config;
 
 class Url{
 
-    private $current = null;
-    private $root = null;
+    private ?string $current = null;
+    private ?string $root = null;
 
 
 
@@ -31,7 +31,7 @@ class Url{
     /*
      * Ana domain üzerenie ekleme yaparak link oluşturur.
      * */
-    public function get($more = ''){
+    public function get(string $more = ''): string{
         return trim($this->root, '/').'/'.trim($more, '/');
     }
 
@@ -41,7 +41,7 @@ class Url{
     /*
      * Aktif sayfanın tam url adresini döndürür
      * */
-    public function current(){
+    public function current(): string{
         return $this->current;
     }
 
@@ -50,8 +50,11 @@ class Url{
     /*
      * Uygulamanın kök url adresini verir.
      * */
-    public function root(){
+    public function root(): string{
         return $this->root;
+    }
+    public function api(): string{
+        return $this->root();
     }
 
 
@@ -80,9 +83,8 @@ class Url{
     /*
      * Request uri parçalarını verir (queryString Hariç)
      * */
-    public function requestUriParts(){
-        $clearRequestUri = str_replace("?{$this->queryString()}", '', $this->requestUri());
-        $clearRequestUri = trim($clearRequestUri, '/');
+    public function requestUriParts(): array{
+        $clearRequestUri = trim($this->requestUri(), '/');
         return explode('/', $clearRequestUri);
     }
 
