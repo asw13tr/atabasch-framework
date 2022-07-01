@@ -16,5 +16,9 @@ class Controller{
         return new Response();
     }
 
+    public function input(){
+        return new Input();
+    }
+
 
 }

@@ -8,6 +8,8 @@ class Main extends Controller{
 
     public function index(){
         echo "Main Controller içindeki <strong>index</strong> methodu";
+        echo "<pre>";
+
 
     }
 

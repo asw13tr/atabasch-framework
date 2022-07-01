@@ -150,13 +150,12 @@ class Request
     }
 
 
-    public function input($name, $default=''){
-        //todo: postdan gelen verileri al.
-        // isim girilmezse tümünü
+    public function input(){
+        return new Input();
     }
 
 
-    public function query($name, $default=''){
+    public function route(){
 
     }
 

@@ -116,29 +116,76 @@ $Router->get('/posts/page/{int}?', function($page_number=1){
 
 
 ## » Yönlendiricilere isim vermek
-Yönlendiricilere isim vermek uygulama içerisinde link verirken veya bir redirect işleminde isim ile yönlendiriciyi çağırmak için gerekebilir.
+Yönlendiricilere isim vermek uygulama içerisinde link verirken veya bir redirect işleminde isim ile yönlendiriciyi çağırmak için gerekebilir. 
+
+- router oluşturan methodların 3. parametresinde bir dizi içinde 'name' indexi ile gönderilebilir
+- Router nesnesinin **name** methodu kullanılabilir (Route belirtmeden önce yapılmalı.)
 ```php
-	$Route->get('/posts', "Post::index")->name('posts');
-	$Route->get('/post/{int}', "Post::get")->name('posts.get');
+	$Router->get('/posts', "Post::index", ['name' => 'posts']);
+	// veya
+	$Router->name('post.get')->get('/post/{int}', "Post::get")
 ```
 
 ## » İstek metodları için ayrı routelar ayarlamak
 REQUEST_METHOD(GET, POST, PUT, ...) çeşitlerinde çalışacak olan routerlar için aşağıdaki gibi kullanımlar geçerlidir.
 ```php 
-$Router->get($path, $handler);              // REQUEST_METHOD=='GET'
-$Router->post($path, $handler);             // REQUEST_METHOD=='POST'
-$Router->put($path, $handler);              // REQUEST_METHOD=='PUT'
-$Router->patch($path, $handler);            // REQUEST_METHOD=='PATCH'
-$Router->delete($path, $handler);           // REQUEST_METHOD=='DELETE'
-$Router->head($path, $handler);             // REQUEST_METHOD=='HEAD'
-$Router->options($path, $handler);          // REQUEST_METHOD=='OPTIONS'
-$Router->any($path, $handler);              // Tümü için geçerli
-$Router->add(['get','post'], $handler);     // REQUEST_METHOD=='GET' veya 'POST'
-$Router->add(['put','patch'], $handler);    // REQUEST_METHOD=='PUT' veya "PATCH
+$Router->get($path, $handler, $options=[]);              // REQUEST_METHOD=='GET'
+$Router->post($path, $handler, $options=[]);             // REQUEST_METHOD=='POST'
+$Router->put($path, $handler, $options=[]);              // REQUEST_METHOD=='PUT'
+$Router->patch($path, $handler, $options=[]);            // REQUEST_METHOD=='PATCH'
+$Router->delete($path, $handler, $options=[]);           // REQUEST_METHOD=='DELETE'
+$Router->head($path, $handler, $options=[]);             // REQUEST_METHOD=='HEAD'
+$Router->options($path, $handler, $options=[]);          // REQUEST_METHOD=='OPTIONS'
+$Router->any($path, $handler, $options=[]);              // Tümü için geçerli
+$Router->match(['get','post'], $handler, $options=[]);     // REQUEST_METHOD=='GET' veya 'POST'
+$Router->match(['put','patch'], $handler, $options=[]);    // REQUEST_METHOD=='PUT' veya "PATCH
 ```
 
 
-## » Hata sayfalarında çalıştırılacak router belirlemek
+# » Group Kullanımı
+Group ile yönlendiricilere toplu halde seçenekler gönderilebilir
+```php 
+
+$Router->prefix('/admin')
+        ->name('admin.')
+        ->middleware(['Authentication'])
+        ->group(function($router){
+            
+            /*  URL: /admin
+                Controller: app\Controllers\Admin\Main.php
+                Class: Main
+                Method: index
+                Router Name: admin.home
+                Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
+            */
+            $router->get('/', 'Admin\Main::index', ['name' => 'home']);
+            
+            
+            $router->prefix('/user')->name('user.')->group(function($router){
+                /*  URL: /admin/user/list
+                    Controller: app\Controllers\Admin\User.php
+                    Class: User
+                    Method: index
+                    Router Name: admin.user.list
+                    Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
+                */
+                $router->get('/list', 'Admin\User::index', ['name' => 'list']);
+                
+                /*  URL: /admin/user/edit
+                    Controller: app\Controllers\Admin\User.php
+                    Class: User
+                    Method: edit
+                    Router Name: admin.user.edit
+                    Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
+                */
+                $router->get('/edit/{id:int}', 'Admin\User::edit', ['name' => 'edit']);
+            });
+        
+        });
+
+```
+
+# » Hata sayfalarında çalıştırılacak router belirlemek
 ```php
 $Router->set404(function(){
 	// Çalışması gereken kodlar
