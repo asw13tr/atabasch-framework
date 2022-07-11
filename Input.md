@@ -2,28 +2,28 @@
 
 Sayfalara GET ve POST methodları ile gönderilen verileri alır.
 
-## » Nesne Oluşturmak
+## » Nesneyi Kullanmak için çağırmak
 ```php 
-$input = new \Atatabasch\System\Input();
+use \Atatabasch\System\Input;
 ```
 
 ## » Getten gelen değerleri almaK
 
 ### Tüm değerleri dizi olarak almak
 ```php 
-$input->get();
+Input::get();
 ```
 
 ### Sadece bir değeri almak
 ```php 
 // domain.ext/../?page=3&order=asc
 
-$input->get('page'); // 3
+Input::get('page'); // 3
 
-$input->get('order'); // asc
+Input::get('order'); // asc
 
 // 2. parametre olarak varsayılan bir değer girilir.
-$input->get('field', 'id'); // id
+Input::get('field', null); // dönen değer: null
 ```
 
 
@@ -31,20 +31,20 @@ $input->get('field', 'id'); // id
 
 ### Tüm değerleri dizi olarak almak
 ```php 
-$input->post();
+Input::post();
 ```
 
 ### Sadece bir değeri almak
 ```php 
-$input->post('username');
-$input->post('password');
+Input::post('username');
+Input::post('password');
 
 // 2. parametre olarak varsayılan bir değer girilir.
-$input->post('accept', 'no');
+Input::post('accept', 'no');
 ```
 
 ### İç içe gelen post verilerini almak
-iç içe gelen post verilerini almak için nokta `.` `-` veya `->` ifadeleri kullanılabilir.
+iç içe gelen post verilerini almak için nokta `.` veya `->` ifadeleri kullanılabilir.
 ```php 
-$input->post('user.name');
+Input::post('user.name');
 ```

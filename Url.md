@@ -5,8 +5,9 @@ Nesneye ait kod örnekleri aşağıdai örnek adress üzerinden gösterilecektir
 **Örnek Adres: http://example.ext/post/list?order=asc&field=name**
 
 ## » Nesne Oluşturmak
+
 ```php
-$url = new \Atabasch\System\Url;
+$url = new \Atabasch\Core\Url;
 ```
 
 ## » Uygulama url adresini verir.

@@ -1,5 +1,5 @@
 <?php
-return (object)[
+return (object) [
 
     'driver'    => 'mysql',
     'host'      => 'localhost',

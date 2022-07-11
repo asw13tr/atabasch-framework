@@ -8,11 +8,12 @@ Yönlendirmeler direkt olarak app klasörü içindeki routes.php dosyasına yaz�
 
 ### » app\routes.php dosya düzeni
 ```php 
-$Router = new \Atabasch\System\Router();
+use \Atabasch\Core\Routing\RouteCollection as Route;
+$route = new Route();
 
-// ... Route kuralları buraya yazılır.
+...
 
-$Router->run();
+$route->run();
 ```
 
 
@@ -21,7 +22,7 @@ $Router->run();
 Direkt olarak bir function çalıştırılabilir.
 ```php
 // site.com/merhaba adresi için erkana "Merhaba Dünya" yazar.
-$Router->get('/merhaba', function(){
+$route->get('/merhaba', function(){
 	echo "Merhaba Dünya.";
 });
 ```
@@ -41,16 +42,19 @@ Controller dosyaları **app\Controllers** dizininde bulunurlar.
  */ 
  
  // Method: index
-$Router->get('/posts', "Post");
+$route->get('/posts', "Post");
 
 // Method: list
-$Router->get('/posts', "Post::list");
+$route->get('/posts', "Post::list");
+$route->get('/posts', "\Atabasch\Controllers\Post::list");
 
 // Method: list
-$Router->get('/posts', ["Post", "list"]);
+$route->get('/posts', ["Post", "list"]);
+$route->get('/posts', ["\Atabasch\Controllers\Post", "list"]);
+
 
 // list
-$Router->get('/posts', [\Atabasch\Controllers\Post::class, "list"]);
+$route->get('/posts', [\Atabasch\Controllers\Post::class, "list"]);
 
 ```
 
@@ -80,14 +84,14 @@ Aşağıdaki tablo'da özel olarak yazılımcının belirleyeceği anahtar ismle
 
 
 ```php
-$Router->get('/user/edit/{id:int}', function($id){
+$route->get('/user/edit/{id:int}', function($id){
 	// /user/edit/11 isteği için $id 11 değerini alır.
 	echo $id;
 });
 
 
 
-$Router->get('/post/{title:slug}/{post_id:id}', function($title){
+$route->get('/post/{title:slug}/{post_id:id}', function($title){
 	/*
 		• /post/deneme/1
 			- $title = deneme
@@ -103,7 +107,7 @@ Dinamik değer alınacak olan kısımda süslü parantez sonrasına eklenen soru
 *Çalıştırılacak olan method için parametre girilirken default değer girilmeli.*
 
 ```php
-$Router->get('/posts/page/{int}?', function($page_number=1){
+$route->get('/posts/page/{id:int}?', function($page_number=1){
 	/*
 		• /posts/page/7
 			- $page_number = 7
@@ -118,38 +122,45 @@ $Router->get('/posts/page/{int}?', function($page_number=1){
 ## » Yönlendiricilere isim vermek
 Yönlendiricilere isim vermek uygulama içerisinde link verirken veya bir redirect işleminde isim ile yönlendiriciyi çağırmak için gerekebilir. 
 
-- router oluşturan methodların 3. parametresinde bir dizi içinde 'name' indexi ile gönderilebilir
-- Router nesnesinin **name** methodu kullanılabilir (Route belirtmeden önce yapılmalı.)
+- router oluşturan methodların 3. parametresinde bir dizi içinde 'as' anahtarı ile gönderilebilir
 ```php
-	$Router->get('/posts', "Post::index", ['name' => 'posts']);
-	// veya
-	$Router->name('post.get')->get('/post/{int}', "Post::get")
+$route->get('/posts', $callback, ['as' => 'posts']);
 ```
 
 ## » İstek metodları için ayrı routelar ayarlamak
 REQUEST_METHOD(GET, POST, PUT, ...) çeşitlerinde çalışacak olan routerlar için aşağıdaki gibi kullanımlar geçerlidir.
 ```php 
-$Router->get($path, $handler, $options=[]);              // REQUEST_METHOD=='GET'
-$Router->post($path, $handler, $options=[]);             // REQUEST_METHOD=='POST'
-$Router->put($path, $handler, $options=[]);              // REQUEST_METHOD=='PUT'
-$Router->patch($path, $handler, $options=[]);            // REQUEST_METHOD=='PATCH'
-$Router->delete($path, $handler, $options=[]);           // REQUEST_METHOD=='DELETE'
-$Router->head($path, $handler, $options=[]);             // REQUEST_METHOD=='HEAD'
-$Router->options($path, $handler, $options=[]);          // REQUEST_METHOD=='OPTIONS'
-$Router->any($path, $handler, $options=[]);              // Tümü için geçerli
-$Router->match(['get','post'], $handler, $options=[]);     // REQUEST_METHOD=='GET' veya 'POST'
-$Router->match(['put','patch'], $handler, $options=[]);    // REQUEST_METHOD=='PUT' veya "PATCH
+$route->get($path, $handler, $options=[]);              // REQUEST_METHOD=='GET'
+$route->post($path, $handler, $options=[]);             // REQUEST_METHOD=='POST'
+$route->put($path, $handler, $options=[]);              // REQUEST_METHOD=='PUT'
+$route->patch($path, $handler, $options=[]);            // REQUEST_METHOD=='PATCH'
+$route->delete($path, $handler, $options=[]);           // REQUEST_METHOD=='DELETE'
+$route->head($path, $handler, $options=[]);             // REQUEST_METHOD=='HEAD'
+$route->options($path, $handler, $options=[]);          // REQUEST_METHOD=='OPTIONS'
+$route->any($path, $handler, $options=[]);              // Tümü için geçerli
+$route->match(['get','post'], $handler, $options=[]);     // REQUEST_METHOD=='GET' veya 'POST'
+$route->match(['put','patch'], $handler, $options=[]);    // REQUEST_METHOD=='PUT' veya "PATCH
 ```
 
 
 # » Group Kullanımı
 Group ile yönlendiricilere toplu halde seçenekler gönderilebilir
-```php 
+Group methodu 3 parametre alır. 
+1. $prefix => grup içindeki route'ların url kısmında önüne gelecek alan.
+2. $options => grup içindeki routeların tümüne uygulanacak seçenekler.
+3. $Closure => bir funksiyon olur ve yeni router parametresini alır. Fonksiyon içindeki
+tüm yeni routelar bu nesneden türemeli
 
-$Router->prefix('/admin')
-        ->name('admin.')
-        ->middleware(['Authentication'])
-        ->group(function($router){
+Eğer herhangi bir ayar girmeyip sadece 
+```php 
+$options = [
+    'as'            => 'admin.',
+    'middleware'    => ['Authentication'],
+    'domain'        => 'admin.site.com',
+    'namespace'     => '\Atabasch\Controllers\Admin',
+
+];
+$route->group('/admin', $options, function($route){
             
             /*  URL: /admin
                 Controller: app\Controllers\Admin\Main.php
@@ -158,10 +169,10 @@ $Router->prefix('/admin')
                 Router Name: admin.home
                 Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
             */
-            $router->get('/', 'Admin\Main::index', ['name' => 'home']);
+            $route->get('/', 'Admin\Main::index', ['name' => 'home']);
             
             
-            $router->prefix('/user')->name('user.')->group(function($router){
+            $route->group('/user', ['as'=>'user.'], function($route){
                 /*  URL: /admin/user/list
                     Controller: app\Controllers\Admin\User.php
                     Class: User
@@ -169,7 +180,7 @@ $Router->prefix('/admin')
                     Router Name: admin.user.list
                     Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
                 */
-                $router->get('/list', 'Admin\User::index', ['name' => 'list']);
+                $route->get('/list', 'Admin\User::index', ['as' => 'list']);
                 
                 /*  URL: /admin/user/edit
                     Controller: app\Controllers\Admin\User.php
@@ -178,7 +189,7 @@ $Router->prefix('/admin')
                     Router Name: admin.user.edit
                     Middelware: app\Middlewares\Authentication.php | Authentication::class | run()
                 */
-                $router->get('/edit/{id:int}', 'Admin\User::edit', ['name' => 'edit']);
+                $route->get('/edit/{id:int}', 'Admin\User::edit', ['as' => 'edit']);
             });
         
         });
@@ -187,19 +198,23 @@ $Router->prefix('/admin')
 
 # » Hata sayfalarında çalıştırılacak router belirlemek
 ```php
-$Router->set404(function(){
+$route->error(function(){
 	// Çalışması gereken kodlar
 });
 
 // veya
 
-$Router->set404("ErrorController::methodName");
+$route->error("ErrorController"); // index methodunu çağırır
 
 // veya
 
-$Router->set404(["ErrorController", "methodName"]);
+$route->error("ErrorController::methodName");
 
 // veya
 
-$Router->set404([\Atabasch\Controllers\ErrorController::class, "methodName"]);
+$route->error(["ErrorController", "methodName"]);
+
+// veya
+
+$route->error([\Atabasch\Controllers\ErrorController::class, "methodName"]);
 ```

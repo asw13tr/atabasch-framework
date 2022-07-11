@@ -13,6 +13,8 @@
             "email": "asw13tr@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "twig/twig": "^3.0"
+    }
 
 }

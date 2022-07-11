@@ -2,13 +2,16 @@
 
 namespace Atabasch\Controllers\Admin;
 
-use Atabasch\System\Controller;
+use Atabasch\Core\Controller;
+use Atabasch\Core\Request;
+use Atabasch\Core\Response;
 
 class Users extends Controller{
 
 
     public function list(){
-        echo "Burası ADMIN içindeki Users Controllerının LIST methdu";
+        return Response::view('user', ['title' => 'Kullanıcı Sayfası'])->statusCode(301);
+
     }
 
 

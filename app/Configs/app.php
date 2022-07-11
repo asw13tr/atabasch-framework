@@ -3,10 +3,22 @@ return (object)[
 
     'name'      => 'Atabasch Framework',
 
-    'url'       => 'http://127.0.0.1/framework/public',
+    'ssl'       => false,
+
+    'url'       => 'asw.fw',
 
     'timezone'  => 'UTC',
 
     'locale'    => 'tr',
+
+    'namespace' => (object) [
+
+        'middleware' => 'Atabasch\Middlewares',
+
+        'controller' => 'Atabasch\Controllers',
+
+        'model'      => 'Atabasch\Models'
+
+    ],
 ];
 ?>

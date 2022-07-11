@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+<h2>Kayıt Formu</h2>
+<hr>
+<form action="{{ url('/contact') }}" class="form" method="post">
+
+    <input type="text" class="form-control" name="name" placeholder="isim" />
+    <hr>
+    <input type="text" class="form-control" name="surname" placeholder="soyisim" />
+    <hr>
+    <input type="text" class="form-control" name="mail" placeholder="email" />
+    <hr>
+    <input type="text" class="form-control" name="card[parent]" placeholder="kard parent " />
+    <hr>
+    <input type="text" class="form-control" name="card[no]" placeholder="kart no" />
+    <hr>
+    <button type="submit" class="btn btn-primary">Gönder</button>
+</form>
+
+{% endblock %}

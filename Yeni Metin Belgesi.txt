@@ -1,0 +1,3 @@
+- Middlewareler yap. run fonksiyonu gerekli ve parametre Request
+- Controller'i yap
+- Database ve Model katmanlarını yap

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adilin SAYFASI</title>
+</head>
+<body>
+
+<h1>Adil</h1>
+
+<h2>Adilin Oynadığı Oyunlar</h2>
+<ul>
+  {% for game in games %}
+    <li>{{ game }}</li>
+    {% endfor %}
+</ul>
+
+</body>
+</html>
